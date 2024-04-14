@@ -1,3 +1,10 @@
+# *****************************************************
+# * Author: Charles Poulin-Bergevin
+# * project: Automatic headers script
+# * comment: automatically generate code files headers
+# * file: header_script.py
+# *****************************************************
+
 import glob
 import os
 import pathlib
