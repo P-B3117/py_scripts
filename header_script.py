@@ -3,6 +3,7 @@
 # * project: Automatic headers script
 # * comment: automatically generate code files headers
 # * file: header_script.py
+# * need to implement this reference: https://dotnetcrunch.in/comments-in-different-programming-languages/#Comments_in_Different_Programming_Languages
 # *****************************************************
 
 import glob
