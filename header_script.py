@@ -10,6 +10,8 @@ def header(filename, author, project, project_comment, commentsign = '//'):
     text += f'{commentsign} * file: {filename}\n'
     text += f'{commentsign} *****************************************************\n'
     return text
+
+
 def writeHeader(paths, author, project, project_comment):
     print(paths)
     for file in paths:
@@ -26,12 +28,17 @@ def writeHeader(paths, author, project, project_comment):
             with open(file, 'w', encoding="utf-8") as f:
                 f.write(header(filename, author=author, project=project, project_comment=project_comment) + '\n' + filedata)
 
+
 def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
     files_grabbed = []
     currentDir = pathlib.Path().resolve()
+    if (os.name == 'posix'):
+        if (filePath[-1] != '/'): filePath = filePath + '/'
+        if (filePath[0] != '/'): filePath = '/' + filePath
+    elif (os.name == 'nt'):
+        if (filePath[-1] != '\\'): filePath = filePath + '\\'
+        if (filePath[0] != '\\'): filePath = '\\' + filePath
 
-    if (filePath[-1] != '/' and filePath[-1] != '\\'): filePath = filePath + '\\'
-    if (filePath[0] != '/' and filePath[0] != '\\'): filePath = '\\' + filePath
     filePath = str(currentDir) + filePath
 
     if (typesTuple != '**'):
