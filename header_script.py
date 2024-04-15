@@ -10,17 +10,18 @@ import glob
 import os
 import pathlib
 
-def header(filename, author, project, project_comment, commentsign = '//'):
+def header(filename, fields, commentsign = '//'):
     text = f'{commentsign} *****************************************************\n'
-    text += f'{commentsign} * Author: {author}\n'
-    text += f'{commentsign} * project: {project}\n'
-    text += f'{commentsign} * comment: {project_comment}\n'
+    
+    for i in fields:
+        text += f'{commentsign} * {i[0]} : {i[1]}\n'
+    
     text += f'{commentsign} * file: {filename}\n'
     text += f'{commentsign} *****************************************************\n'
     return text
 
 
-def writeHeader(paths, author, project, project_comment):
+def writeHeader(paths, fields):
     print(paths)
     for file in paths:
         filename = os.path.basename(file)
@@ -31,10 +32,10 @@ def writeHeader(paths, author, project, project_comment):
     # Write the new file
         if (filename.endswith('.py')) :
             with open(file, 'w', encoding="utf-8") as f:
-                f.write(header(filename, commentsign='#', author=author, project=project, project_comment=project_comment) + '\n' + filedata)
+                f.write(header(filename, commentsign='#', fields= fields) + '\n' + filedata)
         else:
             with open(file, 'w', encoding="utf-8") as f:
-                f.write(header(filename, author=author, project=project, project_comment=project_comment) + '\n' + filedata)
+                f.write(header(filename, fields= fields) + '\n' + filedata)
 
 
 def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
@@ -73,15 +74,25 @@ def main():
         print('3. add header to types of files in a directory:')
         print('4. add header to all files in a directory:')
         print('5. add header to all files in all the sub-directories:')
-        i = input()
+        i = input('your choice: ')
 
         if (i =='q'):
             print('have a great day!')
             break
 
-        author = input('Enter  file(s) author(s): ')
-        project_name = input('Enter  file(s) project name: ')
-        project_comment = input('Enter  file(s) project comment: ')
+        fields = []
+        
+        fields.append(['Author', input('Enter  file(s) author(s): ')])
+        fields.append(['Project', input('Enter  file(s) project name: ')])
+        fields.append(['Comment', input('Enter  file(s) project comment: ')])
+        
+        
+        print('If you dont want to add fields enter \'q\' to quit')
+        while True:
+            fields.append([input('Enter field name: '), input('Enter field value: ')])
+            if (fields[-1][0] == 'q'):
+                fields.pop()
+                break
 
         name = []
 
@@ -117,7 +128,7 @@ def main():
             case _:
                 print('invalid input')
 
-        writeHeader(paths=name, author=author, project= project_name, project_comment= project_comment)
+        writeHeader(paths= name, fields= fields)
 
 
 if __name__ == '__main__':
