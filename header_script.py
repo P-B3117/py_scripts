@@ -4,11 +4,13 @@
 # * comment: automatically generate code files headers
 # * file: header_script.py
 # * need to implement this reference: https://dotnetcrunch.in/comments-in-different-programming-languages/#Comments_in_Different_Programming_Languages
+# * need to use curses menu
 # *****************************************************
 
 import glob
 import os
 import pathlib
+import curses
 
 def header(filename, fields, commentsign = '//'):
     text = f'{commentsign} *****************************************************\n'
@@ -30,7 +32,9 @@ def writeHeader(paths, fields):
             filedata = f.read()
 
     # Write the new file
-        if (filename.endswith('.py')) :
+        if (filename == 'header_script.py'):
+            print('can\'t rewrite this script file')
+        elif (filename.endswith('.py')) :
             with open(file, 'w', encoding="utf-8") as f:
                 f.write(header(filename, commentsign='#', fields= fields) + '\n' + filedata)
         else:
