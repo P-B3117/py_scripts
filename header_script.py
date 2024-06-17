@@ -3,7 +3,6 @@
 # * project: Automatic headers script
 # * comment: automatically generate code files headers
 # * file: header_script.py
-# * need to implement this reference: https://dotnetcrunch.in/comments-in-different-programming-languages/#Comments_in_Different_Programming_Languages
 # * need to use curses menu
 # *****************************************************
 
@@ -12,34 +11,77 @@ import os
 import pathlib
 import curses
 
+TAG = 'header_script.py: '
+
+START_TAG = 'S-HEADER'
+END_TAG = 'E-HEADER'
+HEADER_LINE = '*****************************************************'
+ 
+# the default comment sign is: // 
+# so the languages that uses it may be not listed
+supportedLangs = []
+supportedLangs.append(['.py', '#'])
+supportedLangs.append(['.cpp', '//'])
+supportedLangs.append(['.hpp', '//'])
+supportedLangs.append(['.c', '//'])
+supportedLangs.append(['.h', '//'])
+supportedLangs.append(['.java', '//'])
+supportedLangs.append(['.kt', '//'])
+supportedLangs.append(['.tex', '%'])
+supportedLangs.append(['.rb', '#'])
+supportedLangs.append(['.r', '#'])
+supportedLangs.append(['.pl', '#'])
+
+
 def header(filename, fields, commentsign = '//'):
-    text = f'{commentsign} *****************************************************\n'
+    text = commentsign + START_TAG + '\n'
+    text += f'{commentsign} {HEADER_LINE}\n'
     
     for i in fields:
         text += f'{commentsign} * {i[0]} : {i[1]}\n'
     
     text += f'{commentsign} * file: {filename}\n'
-    text += f'{commentsign} *****************************************************\n'
+    text += f'{commentsign} {HEADER_LINE}\n'
+    text += commentsign + END_TAG + '\n'
     return text
 
 
 def writeHeader(paths, fields):
-    print(paths)
+
+    print(TAG + paths.__str__())
     for file in paths:
         filename = os.path.basename(file)
-        print(f'opening: {filename}')
+        print(TAG + f'opening: {filename}')
         with open(file, 'r', encoding="utf-8") as f:
             filedata = f.read()
 
     # Write the new file
         if (filename == 'header_script.py'):
-            print('can\'t rewrite this script file')
-        elif (filename.endswith('.py')) :
-            with open(file, 'w', encoding="utf-8") as f:
-                f.write(header(filename, commentsign='#', fields= fields) + '\n' + filedata)
+            print(TAG + 'can\'t rewrite the script file')
+
         else:
-            with open(file, 'w', encoding="utf-8") as f:
-                f.write(header(filename, fields= fields) + '\n' + filedata)
+            name, extension = os.path.splitext(filename)
+            sign = '//'
+            STOPFLAG = False
+
+            for x in supportedLangs:
+                if x[0] == extension:
+                    sign = x[1]
+                    break
+            
+            if filedata.partition('\n')[0].__contains__(sign + START_TAG):
+
+                i = input(TAG + 'There is already a header, what do you wanna do with it:\n1: update it\n2: keep it\n')
+                match i:
+                    case '1':
+                        filedata = filedata.partition(sign + END_TAG + '\n')[1]
+
+                    case '2':
+                        STOPFLAG = True
+
+            if STOPFLAG == False:
+                with open(file, 'w', encoding="utf-8") as f:
+                    f.write(header(filename, commentsign=sign, fields= fields) + '\n' + filedata)
 
 
 def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
@@ -58,10 +100,10 @@ def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
         for files in typesTuple:
             if files[0] == '/':
                 files.pop(0)
-            print(f'Processing {filePath + files}')
+            print(TAG + f'Processing {filePath + files}')
             files_grabbed.extend(glob.glob(filePath + files, recursive=True))
     else:
-        print(f'Processing {filePath}')
+        print(TAG + f'Processing {filePath}')
         files_grabbed.extend(glob.glob(filePath + '**/*', recursive=True))
 
     files_grabbed = [file for file in files_grabbed if os.path.isfile(file)]
@@ -72,16 +114,16 @@ def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
 
 def main():
     while True:
-        print('enter \'q\' to quit')
-        print('1. add header to a file in a directory:')
-        print('2. add header to multiple files in a directory:')
-        print('3. add header to types of files in a directory:')
-        print('4. add header to all files in a directory:')
-        print('5. add header to all files in all the sub-directories:')
-        i = input('your choice: ')
+        print(TAG + 'enter \'q\' to quit')
+        print(TAG + '1. add header to a file in a directory:')
+        print(TAG + '2. add header to multiple files in a directory:')
+        print(TAG + '3. add header to types of files in a directory:')
+        print(TAG + '4. add header to all files in a directory:')
+        print(TAG + '5. add header to all files in all the sub-directories:')
+        i = input(TAG + 'your choice: ')
 
         if (i =='q'):
-            print('have a great day!')
+            print(TAG + 'have a great day!')
             break
 
         fields = []
@@ -91,9 +133,9 @@ def main():
         fields.append(['Comment', input('Enter  file(s) project comment: ')])
         
         
-        print('If you dont want to add fields enter \'q\' to quit')
+        print(TAG + 'If you dont want to add fields enter \'q\' to quit')
         while True:
-            fields.append([input('Enter field name: '), input('Enter field value: ')])
+            fields.append([input(TAG + 'Enter field name: '), input(TAG + 'Enter field value: ')])
             if (fields[-1][0] == 'q'):
                 fields.pop()
                 break
@@ -103,34 +145,34 @@ def main():
         match i:
             case '1':
                 name.extend(' ')
-                name[0] = input('Enter complete file path and name (including file extension): ')
+                name[0] = input(TAG + 'Enter complete file path and name (including file extension): ')
             case '2':
-                print('enter \'q\' to quit')
+                print(TAG + 'enter \'q\' to quit')
                 names = []
                 while True:
-                    names.append(input('Enter complete file path and name (including file extension): '))
+                    names.append(input(TAG + 'Enter complete file path and name (including file extension): '))
                     if (names[-1] == 'q'):
                         names.pop()
                         break
                 name.extend(names)
             case '3':
-                print('enter \'q\' to quit')
+                print(TAG + 'enter \'q\' to quit')
                 types = []
                 while True:
-                    types.append('*' + input('Enter complete files type (ex: .cpp): '))
+                    types.append('*' + input(TAG + 'Enter complete files type (ex: .cpp): '))
                     if (types[-1] == '*q'):
                         types.pop()
                         break
-                path = input('what is the path of your files (/ for current directory):')
+                path = input(TAG + 'what is the path of your files (/ for current directory):')
                 name.extend(getFiles(typesTuple=tuple(types), filePath=path))
             case '4':
-                path = input('what is the path of your files (/ for current directory):')
+                path = input(TAG + 'what is the path of your files (/ for current directory):')
                 name.extend(getFiles(typesTuple='*', filePath=path))
             case '5':
-                path = input('what is the root of your files (/ for current directory):')
+                path = input(TAG + 'what is the root of your files (/ for current directory):')
                 name.extend(getFiles(typesTuple='**', filePath=path))
             case _:
-                print('invalid input')
+                print(TAG + 'invalid input')
 
         writeHeader(paths= name, fields= fields)
 
