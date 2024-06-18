@@ -10,7 +10,8 @@ import glob
 import os
 import pathlib
 import curses
-from curses import wrapper
+from curses import wrapper 
+from curses.textpad import Textbox, rectangle
 
 
 TAG = 'header_script.py: '
@@ -113,38 +114,63 @@ def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
         # files_grabbed is the list of files corresponding to the types
     return files_grabbed
 
+def getString(stdscr, y = 1, x = 2, width = 50, height = 5):
+    posy, posx = stdscr.getyx()
+    editwin = curses.newwin(height,width, y+1,x+1)
+    rectangle(stdscr, y,x, 1+y+height, 1+x+width)
+    stdscr.refresh()
+
+    box = Textbox(editwin)
+
+    # Let the user edit until Ctrl-G is struck.
+    box.edit()
+
+    # Get resulting contents
+    message = box.gather()
+    for i in range(height):
+        stdscr.move(y + i, x)
+        stdscr.clrtoeol()
+    
+    stdscr.move(posy, posx)
+    stdscr.refresh()
+    return message
+
+def printTitle(stdscr):
+    stdscr.addstr( 2, 5, 'enter \'q\' to quit')
+
+def printChoices(stdscr):
+    stdscr.clear()
+    stdscr.refresh()
+    printTitle(stdscr)
+    stdscr.addstr( 3, 5, '1. add header to a file in a directory:')
+    stdscr.addstr( 4, 5, '2. add header to multiple files in a directory:')
+    stdscr.addstr( 5, 5, '3. add header to types of files in a directory:')
+    stdscr.addstr( 6, 5, '4. add header to all files in a directory:')
+    stdscr.addstr( 7, 5, '5. add header to all files in all the sub-directories:')
+    stdscr.move(7,5)
+    return (7, 5)
 
 def main(stdscr):
-    posx = 5
-    posy = 7
-
+    
     while True:
-        stdscr.clear()
-        stdscr.refresh()
+                
+        posy, posx = printChoices(stdscr)
+        num_of_choices = posy - 3
         
-        stdscr.addstr( 2, 5, TAG + 'enter \'q\' to quit')
-        stdscr.addstr( 3, 5, TAG + '1. add header to a file in a directory:')
-        stdscr.addstr( 4, 5, TAG + '2. add header to multiple files in a directory:')
-        stdscr.addstr( 5, 5, TAG + '3. add header to types of files in a directory:')
-        stdscr.addstr( 6, 5, TAG + '4. add header to all files in a directory:')
-        stdscr.addstr( 7, 5, TAG + '5. add header to all files in all the sub-directories:')
-        stdscr.move(7,5)
-
         while True:
           i = stdscr.getkey()
           match i:
             case 'w':
-                stdscr.move(posy - 1,posx)
-                posy = posy - 1
-                stdscr.refresh()
+                if posy > 3:
+                    stdscr.move(posy - 1,posx)
+                    posy = posy - 1
+                    stdscr.refresh()
             case 's':
-                stdscr.move(posy + 1,posx)
-                posy = posy + 1
-                stdscr.refresh()
-            case '\n':
-                i = stdscr.getyx()[0] - 3
-                break
-            case '\r':
+                if posy < num_of_choices:
+                    stdscr.move(posy + 1,posx)
+                    posy = posy + 1
+                    stdscr.refresh()
+            case ' ':
                 i = stdscr.getyx()[0] - 3
                 break
             case 'q':
@@ -153,13 +179,24 @@ def main(stdscr):
          
         if (i =='q'):
             break
-            # HERE
         fields = []
         
-        fields.append(['Author', input('Enter  file(s) author(s): ')])
-        fields.append(['Project', input('Enter  file(s) project name: ')])
-        fields.append(['Comment', input('Enter  file(s) project comment: ')])
+        # 
+        # fields.append(['Project', input('Enter  file(s) project name: ')])
+        # fields.append(['Comment', input('Enter  file(s) project comment: ')])
         
+        stdscr.clear()
+        stdscr.addstr( 2, 5, 'enter \'q\' to quit')
+        stdscr.addstr( 3, 5, 'file(s) author(s): ')
+        stdscr.move(3, 24)
+        posx = 24
+        posy = 3
+        answer = getString(stdscr, posy + 1, 5)
+        stdscr.addstr(posy, posx, answer)
+        stdscr.refresh()
+        fields.append(['Author', answer])
+
+        ##################HERE##################
         
         print(TAG + 'If you dont want to add fields enter \'q\' to quit')
         while True:
