@@ -3,7 +3,7 @@
 # * project: Automatic headers script
 # * comment: automatically generate code files headers
 # * file: header_script.py
-# * need to use curses menu
+# * need to have a function to get path
 # *****************************************************
 
 import glob
@@ -12,7 +12,10 @@ import pathlib
 import curses
 from curses import wrapper 
 from curses.textpad import Textbox, rectangle
+import locale
 
+
+locale.setlocale(locale.LC_ALL, '')
 
 TAG = 'header_script.py: '
 
@@ -115,7 +118,6 @@ def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
     return files_grabbed
 
 def getString(stdscr, y = 1, x = 2, width = 50, height = 5):
-    posy, posx = stdscr.getyx()
     editwin = curses.newwin(height,width, y+1,x+1)
     rectangle(stdscr, y,x, 1+y+height, 1+x+width)
     stdscr.refresh()
@@ -131,86 +133,118 @@ def getString(stdscr, y = 1, x = 2, width = 50, height = 5):
         stdscr.move(y + i, x)
         stdscr.clrtoeol()
     
-    stdscr.move(posy, posx)
+    stdscr.move(y, x)
     stdscr.refresh()
+    message = message.strip()
     return message
 
 def printTitle(stdscr):
-    stdscr.addstr( 2, 5, 'enter \'q\' to quit')
+    stdscr.addstr( 2, 5, 'Use space to select and wasd to move     Ctrl+g to stop txt editing')
 
-def printChoices(stdscr):
+def choose(stdscr, choices):
+    y = 2
+    x = 5
     stdscr.clear()
     stdscr.refresh()
     printTitle(stdscr)
-    stdscr.addstr( 3, 5, '1. add header to a file in a directory:')
-    stdscr.addstr( 4, 5, '2. add header to multiple files in a directory:')
-    stdscr.addstr( 5, 5, '3. add header to types of files in a directory:')
-    stdscr.addstr( 6, 5, '4. add header to all files in a directory:')
-    stdscr.addstr( 7, 5, '5. add header to all files in all the sub-directories:')
-    stdscr.move(7,5)
-    return (7, 5)
-
-def main(stdscr):
-    
-    while True:
-                
-        posy, posx = printChoices(stdscr)
-        num_of_choices = posy - 3
+    for choice in choices:
+        y += 1
+        stdscr.addstr( y, x, str(y-2) + ': ' + choice)
+    stdscr.move(y,x)
+    num_of_choices = y - 2
         
-        while True:
-          i = stdscr.getkey()
-          match i:
+    while True:
+        i = stdscr.getkey()
+        match i:
             case 'w':
-                if posy > 3:
-                    stdscr.move(posy - 1,posx)
-                    posy = posy - 1
+                if y > 3:
+                    stdscr.move(y - 1,x)
+                    y = y - 1
                     stdscr.refresh()
             case 's':
-                if posy < num_of_choices:
-                    stdscr.move(posy + 1,posx)
-                    posy = posy + 1
+                if y < num_of_choices + 2:
+                    stdscr.move(y + 1,x)
+                    y = y + 1
                     stdscr.refresh()
             case ' ':
-                i = stdscr.getyx()[0] - 3
+                i = stdscr.getyx()[0] - 2
                 break
             case 'q':
                 break
+    return (i, y, x)
+
+def addField(stdscr, field_array, field = ''):
+    if field == '':
+        field_question = 'Enter the field name: '
+        stdscr.clear()
+        printTitle(stdscr)
+        stdscr.addstr( 3, 5, field_question)
+        x = 6 + len(field_question)
+        y = 3
+        stdscr.move(3, x)
+        field = getString(stdscr, y + 1, 5)
+    stdscr.clear()
+    printTitle(stdscr)
+    stdscr.addstr( 3, 5, field)
+    x = 6 + len(field)
+    y = 3
+    stdscr.move(3, x)
+    answer = getString(stdscr, y + 1, 5)
+    stdscr.addstr(y, x, answer)
+    stdscr.refresh()
+    field_array.append([field + ': ', answer])
+
+def main(stdscr):
+    start_choices = []
+    start_choices.append('add header to a file in a directory:')
+    start_choices.append('add header to multiple files in a directory:')
+    start_choices.append('add header to types of files in a directory:')
+    start_choices.append('add header to all files in a directory:')
+    start_choices.append('add header to all files in all the sub-directories:')
+    start_choices.append('Exit:')
+
+    editing_choices = []
+    editing_choices.append('add a field')
+    editing_choices.append('edit a field')
+    editing_choices.append('remove a field')
+    editing_choices.append('Exit: ')
+
+    while True:
+        
+
+        i, y, x = choose(stdscr, start_choices)
+        
 
          
-        if (i =='q'):
+        if (i == len(start_choices)):
             break
         fields = []
         
-        # 
-        # fields.append(['Project', input('Enter  file(s) project name: ')])
-        # fields.append(['Comment', input('Enter  file(s) project comment: ')])
+        addField(stdscr, fields, 'Author(s)')
+        addField(stdscr, fields, 'Project')
+        addField(stdscr, fields, 'Comment')
         
-        stdscr.clear()
-        stdscr.addstr( 2, 5, 'enter \'q\' to quit')
-        stdscr.addstr( 3, 5, 'file(s) author(s): ')
-        stdscr.move(3, 24)
-        posx = 24
-        posy = 3
-        answer = getString(stdscr, posy + 1, 5)
-        stdscr.addstr(posy, posx, answer)
-        stdscr.refresh()
-        fields.append(['Author', answer])
-
-        ##################HERE##################
-        
-        print(TAG + 'If you dont want to add fields enter \'q\' to quit')
         while True:
-            fields.append([input(TAG + 'Enter field name: '), input(TAG + 'Enter field value: ')])
-            if (fields[-1][0] == 'q'):
-                fields.pop()
+            c, y, x  = choose(stdscr, editing_choices)
+            if (c == len(editing_choices)):
                 break
-
+            match c:
+                case 1:
+                    addField(stdscr, fields)
+                case 2:
+                    break
+                case 3:
+                    break
+        
         name = []
 
         match i:
-            case '1':
+            case 1:
+                stdscr.clear()
                 name.extend(' ')
-                name[0] = input(TAG + 'Enter complete file path and name (including file extension): ')
+                printTitle(stdscr)
+                s = getString(stdscr, 3, 5)
+                name[0] = s
             case '2':
                 print(TAG + 'enter \'q\' to quit')
                 names = []
