@@ -15,8 +15,6 @@ from curses.textpad import Textbox, rectangle
 import locale
 
 
-locale.setlocale(locale.LC_ALL, '')
-
 TAG = 'header_script.py: '
 
 START_TAG = 'S-HEADER'
