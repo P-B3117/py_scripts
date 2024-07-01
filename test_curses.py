@@ -139,6 +139,8 @@ def getString(stdscr, y = 1, x = 2, width = 50, height = 5):
 def printTitle(stdscr):
     stdscr.addstr( 2, 5, 'Use space to select and wasd to move     Ctrl+g to stop txt editing')
 
+
+
 def choose(stdscr, choices):
     y = 2
     x = 5
