@@ -10,10 +10,8 @@ import glob
 import os
 import pathlib
 import curses
-from curses import wrapper 
+from curses import wrapper
 from curses.textpad import Textbox, rectangle
-import locale
-
 
 TAG = 'header_script.py: '
 
