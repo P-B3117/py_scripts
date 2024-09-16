@@ -3,7 +3,7 @@
 # * project: Automatic headers script
 # * comment: automatically generate code files headers
 # * file: header_script.py
-# * need to have a function to get path
+# * need to have a function to get path: https://stackoverflow.com/questions/5137497/find-the-current-directory-and-files-directory
 # *****************************************************
 
 import glob
