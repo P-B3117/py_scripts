@@ -8,6 +8,7 @@
 
 import glob
 import os
+import sys
 import pathlib
 import curses
 from curses import wrapper
@@ -48,7 +49,7 @@ def header(filename, fields, commentsign = '//'):
     return text
 
 
-def writeHeader(paths, fields):
+def writeHeader(stdscr, paths, fields):
 
     print(TAG + paths.__str__())
     for file in paths:
@@ -73,10 +74,11 @@ def writeHeader(paths, fields):
             
             if filedata.partition('\n')[0].__contains__(sign + START_TAG):
 
-                i = input(TAG + 'There is already a header, what do you wanna do with it:\n1: update it\n2: keep it\n')
-                match i:
+                # i = input(TAG + 'There is already a header, what do you wanna do with it:\n1: update it\n2: keep it\n')
+                i = choose(stdscr=stdscr, choices= ['update it', 'keep it'], title=(filename + ': has already a header. What do you wanna do?'))[0]
+                match str(i):
                     case '1':
-                        filedata = filedata.partition(sign + END_TAG + '\n')[1]
+                        filedata = filedata.partition(END_TAG)[2]
 
                     case '2':
                         STOPFLAG = True
@@ -134,38 +136,42 @@ def getString(stdscr, y = 1, x = 2, width = 50, height = 5):
     message = message.strip()
     return message
 
-def printTitle(stdscr):
+def printTitle(stdscr, title = False):
     stdscr.addstr( 2, 5, 'Use space to select and wasd to move     Ctrl+g to stop txt editing')
+    if title != False:
+        stdscr.addstr( 3, 5, title)
 
 
-
-def choose(stdscr, choices):
-    y = 2
+def choose(stdscr, choices, title = False):
+    y = 3
     x = 5
     stdscr.clear()
     stdscr.refresh()
-    printTitle(stdscr)
+    if title != False:
+        printTitle(stdscr, title)
+    else:
+        printTitle(stdscr)
     for choice in choices:
         y += 1
-        stdscr.addstr( y, x, str(y-2) + ': ' + choice)
+        stdscr.addstr( y, x, str(y-3) + ': ' + choice)
     stdscr.move(y,x)
-    num_of_choices = y - 2
+    num_of_choices = y - 3
         
     while True:
         i = stdscr.getkey()
         match i:
             case 'w':
-                if y > 3:
+                if y > 4:
                     stdscr.move(y - 1,x)
                     y = y - 1
                     stdscr.refresh()
             case 's':
-                if y < num_of_choices + 2:
+                if y < num_of_choices + 3:
                     stdscr.move(y + 1,x)
                     y = y + 1
                     stdscr.refresh()
             case ' ':
-                i = stdscr.getyx()[0] - 2
+                i = stdscr.getyx()[0] - 3
                 break
             case 'q':
                 break
@@ -193,6 +199,7 @@ def addField(stdscr, field_array, field = ''):
     field_array.append([field + ': ', answer])
 
 def main(stdscr):
+    
     start_choices = []
     start_choices.append('add header to a file in a directory:')
     start_choices.append('add header to multiple files in a directory:')
@@ -207,8 +214,15 @@ def main(stdscr):
     editing_choices.append('remove a field')
     editing_choices.append('Exit: ')
 
+    headerInput = False
+
     while True:
         
+        if len(sys.argv) > 1:
+            choice = printTitle(stdscr=stdscr, title='A header file has been detected, do you wanna use it?')[0]
+            match choice:
+                case 1:
+                    headerInput = True
 
         i, y, x = choose(stdscr, start_choices)
         
@@ -230,7 +244,11 @@ def main(stdscr):
                 case 1:
                     addField(stdscr, fields)
                 case 2:
-                    break
+                    fieldsName = []
+                    for field in fields:
+                        fieldsName.append(field[0])
+                    fieldsName.append('exit: ')
+                    choose(stdscr=stdscr, choices = fieldsName, title='wich field do you wanna edit?')
                 case 3:
                     break
         
@@ -240,38 +258,43 @@ def main(stdscr):
             case 1:
                 stdscr.clear()
                 name.extend(' ')
-                printTitle(stdscr)
-                s = getString(stdscr, 3, 5)
+                printTitle(stdscr, 'enter the filename (including the file extension): ')
+                s = getString(stdscr, 4, 5)
                 name[0] = s
-            case '2':
-                print(TAG + 'enter \'q\' to quit')
+            case 2:
+                stdscr.clear() # print(TAG + 'enter \'q\' to quit')
                 names = []
+                printTitle(stdscr=stdscr, title='enter the filename (including the file extension): ')
                 while True:
-                    names.append(input(TAG + 'Enter complete file path and name (including file extension): '))
+                    names.append(getString(stdscr=stdscr, y=4, x=5))
+                #     names.append(input(TAG + 'Enter complete file path and name (including file extension): '))
                     if (names[-1] == 'q'):
                         names.pop()
                         break
                 name.extend(names)
-            case '3':
-                print(TAG + 'enter \'q\' to quit')
+            case 3:
+                stdscr.clear() #print(TAG + 'enter \'q\' to quit')
                 types = []
                 while True:
-                    types.append('*' + input(TAG + 'Enter complete files type (ex: .cpp): '))
+                    printTitle(stdscr=stdscr, title=('Enter complete files type (ex: .cpp): '))
+                    types.append('*' + getString(stdscr=stdscr, y=4, x=5)) #types.append('*' + input(TAG + 'Enter complete files type (ex: .cpp): '))
                     if (types[-1] == '*q'):
                         types.pop()
                         break
-                path = input(TAG + 'what is the path of your files (/ for current directory):')
+                printTitle(stdscr=stdscr, title=('what is the path of your files (/ for current directory):'))
+                path = getString(stdscr=stdscr, y=4, x=5)
                 name.extend(getFiles(typesTuple=tuple(types), filePath=path))
-            case '4':
-                path = input(TAG + 'what is the path of your files (/ for current directory):')
+            case 4:
+                printTitle(stdscr=stdscr, title='what is the path of your files (/ for current directory):')
+                path = getString(stdscr=stdscr, y=4, x=5)
                 name.extend(getFiles(typesTuple='*', filePath=path))
-            case '5':
-                path = input(TAG + 'what is the root of your files (/ for current directory):')
+            case 5:
+                printTitle(stdscr=stdscr, title='what is the path of your files (/ for current directory):')
+                path = getString(stdscr=stdscr, y=4, x=5)
                 name.extend(getFiles(typesTuple='**', filePath=path))
-            case _:
-                print(TAG + 'invalid input')
+            
 
-        writeHeader(paths= name, fields= fields)
+        writeHeader(stdscr= stdscr, paths= name, fields= fields)
 
 
 if __name__ == '__main__':
