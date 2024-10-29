@@ -1,3 +1,4 @@
+# S-HEADER
 # *****************************************************
 # * Author: Charles Poulin-Bergevin
 # * project: Automatic headers script
@@ -5,6 +6,7 @@
 # * file: header_script.py
 # * need to have a function to get path: https://stackoverflow.com/questions/5137497/find-the-current-directory-and-files-directory
 # *****************************************************
+# E-HEADER
 
 import glob
 import os
@@ -87,6 +89,19 @@ def writeHeader(stdscr, paths, fields):
                 with open(file, 'w', encoding="utf-8") as f:
                     f.write(header(filename, commentsign=sign, fields= fields) + '\n' + filedata)
 
+def exctractHeader(path):
+    fields = []
+
+    with open(path, 'r', encoding='utf-8') as f:
+        filedata = f.read
+
+    filedata = filedata.partition(END_TAG)[0]
+    filedata = filedata.partition(START_TAG)[2]
+
+    # basically for each lines, if not HEADER_LINE or file field get the field and return that thang
+    
+    
+    return fields
 
 def getFiles(typesTuple=('*.cpp', '*.h', '*.hpp'), filePath='/'):
     files_grabbed = []
@@ -155,26 +170,34 @@ def choose(stdscr, choices, title = False):
         y += 1
         stdscr.addstr( y, x, str(y-3) + ': ' + choice)
     stdscr.move(y,x)
-    num_of_choices = y - 3
-        
-    while True:
+    num_of_choices = len(choices)
+
+    hasChosen = False
+    while hasChosen == False:
         i = stdscr.getkey()
-        match i:
-            case 'w':
-                if y > 4:
-                    stdscr.move(y - 1,x)
-                    y = y - 1
-                    stdscr.refresh()
-            case 's':
-                if y < num_of_choices + 3:
-                    stdscr.move(y + 1,x)
-                    y = y + 1
-                    stdscr.refresh()
-            case ' ':
-                i = stdscr.getyx()[0] - 3
-                break
-            case 'q':
-                break
+
+        try:
+            if (int(i) > 0 and int(i) <= num_of_choices):
+                i = int(i)
+                hasChosen = True
+        except:
+            # print(TAG + 'input was not a number')
+            match i:
+                case 'w':
+                    if y > 4:
+                        stdscr.move(y - 1,x)
+                        y = y - 1
+                        stdscr.refresh()
+                case 's':
+                    if y < num_of_choices + 3:
+                        stdscr.move(y + 1,x)
+                        y = y + 1
+                        stdscr.refresh()
+                case ' ':
+                    i = stdscr.getyx()[0] - 3
+                    hasChosen = True
+                case 'q':
+                    hasChosen = True
     return (i, y, x)
 
 def addField(stdscr, field_array, field = ''):
@@ -219,7 +242,8 @@ def main(stdscr):
     while True:
         
         if len(sys.argv) > 1:
-            choice = printTitle(stdscr=stdscr, title='A header file has been detected, do you wanna use it?')[0]
+            printTitle(stdscr=stdscr, title='A header file has been detected, do you wanna use it?')
+            choice = choose(stdscr, ["yes", "no"])
             match choice:
                 case 1:
                     headerInput = True
